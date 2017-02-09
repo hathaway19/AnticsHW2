@@ -159,3 +159,7 @@ class AIPlayer(Player):
     def registerWin(self, hasWon):
         #method templaste, not implemented
         pass
+
+# class node:
+#     def __init__(self, data):
+#         self.costToReach
