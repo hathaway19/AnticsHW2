@@ -1,7 +1,7 @@
 # -*- coding: latin-1 -*-
 import random
 import sys
-sys.path.append("..")  #so other modules can be found in parent dir
+sys.path.append("..")  #so other modules can be found in parent directory
 from Player import *
 from Constants import *
 from Construction import CONSTR_STATS
