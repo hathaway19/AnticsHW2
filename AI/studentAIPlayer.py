@@ -34,27 +34,64 @@ class AIPlayer(Player):
     ##
     #getPlacement
     #
-    #Description: The getPlacement method corresponds to the 
-    #action taken on setup phase 1 and setup phase 2 of the game. 
-    #In setup phase 1, the AI player will be passed a copy of the 
-    #state as currentState which contains the board, accessed via 
-    #currentState.board. The player will then return a list of 11 tuple 
-    #coordinates (from their side of the board) that represent Locations 
-    #to place the anthill and 9 grass pieces. In setup phase 2, the player 
+    #Description: The getPlacement method corresponds to the
+    #action taken on setup phase 1 and setup phase 2 of the game.
+    #In setup phase 1, the AI player will be passed a copy of the
+    #state as currentState which contains the board, accessed via
+    #currentState.board. The player will then return a list of 11 tuple
+    #coordinates (from their side of the board) that represent Locations
+    #to place the anthill and 9 grass pieces. In setup phase 2, the player
     #will again be passed the state and needs to return a list of 2 tuple
     #coordinates (on their opponent's side of the board) which represent
-    #Locations to place the food sources. This is all that is necessary to 
+    #Locations to place the food sources. This is all that is necessary to
     #complete the setup phases.
     #
     #Parameters:
-    #   currentState - The current state of the game at the time the Game is 
+    #   currentState - The current state of the game at the time the Game is
     #       requesting a placement from the player.(GameState)
     #
     #Return: If setup phase 1: list of eleven 2-tuples of ints -> [(x1,y1), (x2,y2),…,(x10,y10)]
     #       If setup phase 2: list of two 2-tuples of ints -> [(x1,y1), (x2,y2)]
     ##
     def getPlacement(self, currentState):
-       return None
+        numToPlace = 0
+        #implemented by students to return their next move
+        if currentState.phase == SETUP_PHASE_1:    #stuff on my side
+            numToPlace = 11
+            moves = []
+            for i in range(0, numToPlace):
+                move = None
+                while move == None:
+                    #Choose any x location
+                    x = random.randint(0, 9)
+                    #Choose any y location on your side of the board
+                    y = random.randint(0, 3)
+                    #Set the move if this space is empty
+                    if currentState.board[x][y].constr == None and (x, y) not in moves:
+                        move = (x, y)
+                        #Just need to make the space non-empty. So I threw whatever I felt like in there.
+                        currentState.board[x][y].constr == True
+                moves.append(move)
+            return moves
+        elif currentState.phase == SETUP_PHASE_2:   #stuff on foe's side
+            numToPlace = 2
+            moves = []
+            for i in range(0, numToPlace):
+                move = None
+                while move == None:
+                    #Choose any x location
+                    x = random.randint(0, 9)
+                    #Choose any y location on enemy side of the board
+                    y = random.randint(6, 9)
+                    #Set the move if this space is empty
+                    if currentState.board[x][y].constr == None and (x, y) not in moves:
+                        move = (x, y)
+                        #Just need to make the space non-empty. So I threw whatever I felt like in there.
+                        currentState.board[x][y].constr == True
+                moves.append(move)
+            return moves
+        else:
+            return [(0, 0)]
     
     ##
     #getMove
@@ -77,29 +114,38 @@ class AIPlayer(Player):
     #Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
-        return None
+        moves = listAllLegalMoves(currentState)
+        selectedMove = moves[random.randint(0, len(moves) - 1)];
+
+        # don't do a build move if there are already 3+ ants
+        numAnts = len(currentState.inventories[currentState.whoseTurn].ants)
+        while (selectedMove.moveType == BUILD and numAnts >= 3):
+            selectedMove = moves[random.randint(0, len(moves) - 1)];
+
+        return selectedMove
     
     ##
     #getAttack
-    #Description: The getAttack method is called on the player whenever an ant completes 
-    #a move and has a valid attack. It is assumed that an attack will always be made 
-    #because there is no strategic advantage from withholding an attack. The AIPlayer 
-    #is passed a copy of the state which again contains the board and also a clone of 
-    #the attacking ant. The player is also passed a list of coordinate tuples which 
-    #represent valid locations for attack. Hint: a random AI can simply return one of 
-    #these coordinates for a valid attack. 
+    #Description: The getAttack method is called on the player whenever an ant completes
+    #a move and has a valid attack. It is assumed that an attack will always be made
+    #because there is no strategic advantage from withholding an attack. The AIPlayer
+    #is passed a copy of the state which again contains the board and also a clone of
+    #the attacking ant. The player is also passed a list of coordinate tuples which
+    #represent valid locations for attack. Hint: a random AI can simply return one of
+    #these coordinates for a valid attack.
     #
     #Parameters:
-    #   currentState - The current state of the game at the time the Game is requesting 
+    #   currentState - The current state of the game at the time the Game is requesting
     #       a move from the player. (GameState)
     #   attackingAnt - A clone of the ant currently making the attack. (Ant)
-    #   enemyLocation - A list of coordinate locations for valid attacks (i.e. 
+    #   enemyLocation - A list of coordinate locations for valid attacks (i.e.
     #       enemies within range) ([list of 2-tuples of ints])
     #
     #Return: A coordinate that matches one of the entries of enemyLocations. ((int,int))
     ##
     def getAttack(self, currentState, attackingAnt, enemyLocations):
-        return None
+        #Attack a random enemy.
+        return enemyLocations[random.randint(0, len(enemyLocations) - 1)]
         
     ##
     #registerWin
