@@ -60,6 +60,9 @@ class AIPlayer(Player):
     #       If setup phase 2: list of two 2-tuples of ints -> [(x1,y1), (x2,y2)]
     ##
     def getPlacement(self, currentState):
+        # Resets the variable to check if someone won
+        self.statusOfGame = gameIsStillRunning
+
         numToPlace = 0
         #implemented by students to return their next move
         if currentState.phase == SETUP_PHASE_1:    #stuff on my side
@@ -192,16 +195,43 @@ def checkIfWinning(self, currentState):
     elif self.statusOfGame == currentPlayerLost:
         return 0.0
 
+    # Variables to store player's and the opponent's IDs
     me = currentState.whoseTurn
     enemy = (currentState.whoseTurn + 1) % 2
+    myInv = getCurrPlayerInventory(currentState)
+    enemyInv = getOtherPlayerInventory(currentState)
 
+    # Variable to hold the number of ants on the board
     totalNumOfAnts = float(len(getAntList(currentState, None, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
+    # Varaible to hold ants belonging to the current player
     myNumOfAnts = float(len(getAntList(currentState, me, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
 
-    myScore = myNumOfAnts/totalNumOfAnts
+    totalFood = float(myInv.foodCount + enemyInv.foodCount)
+    myFoodScore = 0
+    if totalFood != 0:
+        myFoodScore = ((totalFood - myInv.foodCount) / totalFood)
 
-    print "my ratio: ", myScore
+    myScore = (myNumOfAnts / totalNumOfAnts)*3/4 + myFoodScore*1/4
+
+    #print "my ratio: ", myScore
     return myScore
+
+
+def getOtherPlayerInventory(currentState):
+    # Get my inventory
+    resultInv = None
+    for inv in currentState.inventories:
+        if inv.player != currentState.whoseTurn:
+            resultInv = inv
+            break
+
+    return resultInv
 
 #ToDo: Implement a dictionary (look that up)
 #It could take: key: coordinate value: node class (create a class for a single node
+
+# class node:
+#     def __init__(self):
+#         self.parentNode = None
+#         self.newState = None
+#         self.
