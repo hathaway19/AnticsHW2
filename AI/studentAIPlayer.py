@@ -10,6 +10,10 @@ from Move import Move
 from GameState import addCoords
 from AIPlayerUtils import *
 
+#Constants
+currentPlayerWon = 1
+currentPlayerLost = -1
+gameIsStillRunning = 0
 
 ##
 #AIPlayer
@@ -30,6 +34,8 @@ class AIPlayer(Player):
     ##
     def __init__(self, inputPlayerId):
         super(AIPlayer,self).__init__(inputPlayerId, "SearchAI")
+
+        self.statusOfGame = gameIsStillRunning
     
     ##
     #getPlacement
@@ -114,6 +120,7 @@ class AIPlayer(Player):
     #Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
+        currentSituation = checkIfWinning(self, currentState)
         moves = listAllLegalMoves(currentState)
         selectedMove = moves[random.randint(0, len(moves) - 1)];
 
@@ -146,7 +153,7 @@ class AIPlayer(Player):
     def getAttack(self, currentState, attackingAnt, enemyLocations):
         #Attack a random enemy.
         return enemyLocations[random.randint(0, len(enemyLocations) - 1)]
-        
+
     ##
     #registerWin
     #Description: The last method, registerWin, is called when the game ends and simply 
@@ -157,9 +164,44 @@ class AIPlayer(Player):
     #   hasWon - True if the player has won the game, False if the player lost. (Boolean)
     #
     def registerWin(self, hasWon):
-        #method templaste, not implemented
+        if hasWon:
+            self.statusOfGame = currentPlayerWon
+        else:
+            self.statusOfGame = currentPlayerLost
         pass
 
-# class node:
-#     def __init__(self, data):
-#         self.costToReach
+##
+# checkIfWinning
+# Description: This method, checkIfWinning, evaluates the game state and sees if the AI
+# is currently winning or loosing against its opponent.
+#
+# Parameters:
+#   hasWon - True if the player has won the game, False if the player lost. (Boolean)
+#   currentState - The current state of the game.
+#
+# Returns: A double that shows how well the AI is performing at a given state. 1.0
+# means the AI has already won, 0.0 means the AI has already lost. Anything in the middle
+# means that the game is still running with everything above 0.5 meaning the AI is winning
+# and anything lower than 0.5 means the AI is loosing.
+#
+def checkIfWinning(self, currentState):
+    # Returns 1.0 if the AI has already won
+    if self.statusOfGame == currentPlayerWon:
+        return 1.0
+    # Returns 0.0 if the AI has already lost
+    elif self.statusOfGame == currentPlayerLost:
+        return 0.0
+
+    me = currentState.whoseTurn
+    enemy = (currentState.whoseTurn + 1) % 2
+
+    totalNumOfAnts = float(len(getAntList(currentState, None, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
+    myNumOfAnts = float(len(getAntList(currentState, me, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
+
+    myScore = myNumOfAnts/totalNumOfAnts
+
+    print "my ratio: ", myScore
+    return myScore
+
+#ToDo: Implement a dictionary (look that up)
+#It could take: key: coordinate value: node class (create a class for a single node
