@@ -198,6 +198,7 @@ def checkIfWinning(self, currentState):
     # Variables to store player's and the opponent's IDs
     me = currentState.whoseTurn
     enemy = (currentState.whoseTurn + 1) % 2
+    # Gets both player's inventories
     myInv = getCurrPlayerInventory(currentState)
     enemyInv = getOtherPlayerInventory(currentState)
 
@@ -213,7 +214,7 @@ def checkIfWinning(self, currentState):
 
     myScore = (myNumOfAnts / totalNumOfAnts)*3/4 + myFoodScore*1/4
 
-    #print "my ratio: ", myScore
+    print "my ratio: ", myScore
     return myScore
 
 
