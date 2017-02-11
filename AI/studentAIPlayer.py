@@ -200,33 +200,40 @@ def checkIfWinning(self, currentState):
     enemy = (currentState.whoseTurn + 1) % 2
     # Gets both player's inventories
     myInv = getCurrPlayerInventory(currentState)
-    enemyInv = getOtherPlayerInventory(currentState)
+    enemyInv = currentState.inventories[enemy]
 
-    # Variable to hold the number of ants on the board
+    # Variables to hold number of ants each player controls
     totalNumOfAnts = float(len(getAntList(currentState, None, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
-    # Varaible to hold ants belonging to the current player
     myNumOfAnts = float(len(getAntList(currentState, me, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
 
-    totalFood = float(myInv.foodCount + enemyInv.foodCount)
-    myFoodScore = 0
-    if totalFood != 0:
-        myFoodScore = ((totalFood - myInv.foodCount) / totalFood)
+    myScore = (myNumOfAnts / totalNumOfAnts)
 
-    myScore = (myNumOfAnts / totalNumOfAnts)*3/4 + myFoodScore*1/4
-
-    print "my ratio: ", myScore
     return myScore
+    # Variables to hold player's ants and anthills
+    # myWorkers = getAntList(currentState, me, (WORKER,))
+    # allWorkers = getAntList(currentState, None, (WORKER,))
+    #
+    # myFighters = getAntList(currentState, me, (DRONE, SOLDIER, R_SOLDIER,))
+    # allFighters = getAntList(currentState, me, (DRONE, SOLDIER, R_SOLDIER,))
+    #
+    # myQueen = getAntList(currentState, me, (QUEEN,))
+    # enemyQueen = getAntList(currentState, me, (QUEEN,))
+    #
+    # myAnthill = getConstrList(currentState, me, (ANTHILL,))
+    # enemyAnthill = getConstrList(currentState, enemy, (ANTHILL,))
 
-
-def getOtherPlayerInventory(currentState):
-    # Get my inventory
-    resultInv = None
-    for inv in currentState.inventories:
-        if inv.player != currentState.whoseTurn:
-            resultInv = inv
-            break
-
-    return resultInv
+    # totalFood = float(myInv.foodCount + enemyInv.foodCount)
+    # myFoodScore = 0
+    # if totalFood != 0:
+    #     myFoodScore = ((totalFood - myInv.foodCount) / totalFood)
+    #
+    # # Variable to calculate the double showing chances of winning with the following weights
+    # # 70% number of ants the player controls vs. the opponent
+    # # 30% amount of food the player has compared to the opponent
+    # myScore = (myNumOfAnts / totalNumOfAnts)*7/10 + myFoodScore*3/10
+    #
+    # print "my ratio: ", myScore
+    # return myScore
 
 #ToDo: Implement a dictionary (look that up)
 #It could take: key: coordinate value: node class (create a class for a single node
