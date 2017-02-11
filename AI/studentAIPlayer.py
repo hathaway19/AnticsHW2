@@ -203,11 +203,20 @@ def checkIfWinning(self, currentState):
     enemyInv = currentState.inventories[enemy]
 
     # Variables to hold number of ants each player controls
-    totalNumOfAnts = float(len(getAntList(currentState, None, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
-    myNumOfAnts = float(len(getAntList(currentState, me, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
+    allAnts = getAntList(currentState, None, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))
+    myAnts = getAntList(currentState, me, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))
 
-    myScore = (myNumOfAnts / totalNumOfAnts)
+    ## Calculates the score the current player recieves based on the bellow factors: ##
+    # 1) The ants that the player controls on the board
+    # 2) The amount of food needed
+    # Gets divided by the number of factors taken into consideration
+    myScore = ((float(len(myAnts)) / float(len(allAnts)))
+               + (float(myInv.foodCount / 11))) / 2
 
+    print "my score: ", myScore
+    print "     total ants: ", len(allAnts)
+    print "     my ants: ", len(myAnts)
+    print "     amount of food: ", myInv.foodCount
     return myScore
     # Variables to hold player's ants and anthills
     # myWorkers = getAntList(currentState, me, (WORKER,))
@@ -221,19 +230,6 @@ def checkIfWinning(self, currentState):
     #
     # myAnthill = getConstrList(currentState, me, (ANTHILL,))
     # enemyAnthill = getConstrList(currentState, enemy, (ANTHILL,))
-
-    # totalFood = float(myInv.foodCount + enemyInv.foodCount)
-    # myFoodScore = 0
-    # if totalFood != 0:
-    #     myFoodScore = ((totalFood - myInv.foodCount) / totalFood)
-    #
-    # # Variable to calculate the double showing chances of winning with the following weights
-    # # 70% number of ants the player controls vs. the opponent
-    # # 30% amount of food the player has compared to the opponent
-    # myScore = (myNumOfAnts / totalNumOfAnts)*7/10 + myFoodScore*3/10
-    #
-    # print "my ratio: ", myScore
-    # return myScore
 
 #ToDo: Implement a dictionary (look that up)
 #It could take: key: coordinate value: node class (create a class for a single node
