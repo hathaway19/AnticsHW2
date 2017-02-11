@@ -36,7 +36,78 @@ class AIPlayer(Player):
         super(AIPlayer,self).__init__(inputPlayerId, "SearchAI")
 
         self.statusOfGame = gameIsStillRunning
-    
+
+    ##
+    # evaluation
+    def evaluation(self, PState, currentState):
+        RankV = 0
+        me = currentState.whoseTurn
+
+        Opponent = 0 if self.playerId == 1 else 1  # gets opponents int value
+
+        # Find the ant count for each player
+        antCountOurs = len(getAntList(currentState, self.playerId, (0, 1, 2, 3, 4)))
+        antCountOpp = len(getAntList(currentState, Opponent, (0, 1, 2, 3, 4)))
+
+        if antCountOurs > antCountOpp:  # scoring method
+            RankV = RankV + .3
+
+        # Compares both players food count
+        if currentState.inventories[self.playerId].foodCount > currentState.inventories[
+            Opponent].foodCount:  # scoring method
+            RankV = RankV + .45
+
+        # Finds and compares the amount of food each player is carrying
+        grabbedFoodOurs = []
+        grabbedFoodOpp = []
+        count = 0
+        for ant in range(0, len(getAntList(currentState, self.playerId, (WORKER,)))):
+            if getAntList(currentState, self.playerId, (WORKER,))[ant].carrying:
+                count = count + 1
+        grabbedFoodOurs = count
+        Counter = 0
+        for ant in range(0, len(getAntList(currentState, Opponent, (WORKER,)))):
+            if getAntList(currentState, Opponent, (WORKER,))[ant].carrying:
+                count = count + 1
+        grabbedFoodOpp = count
+
+        if grabbedFoodOurs > grabbedFoodOpp:
+            RankV = RankV + .2
+
+        return RankV
+
+    ##
+    # nodeExpand
+    #
+    def nodeExpand(self, currentState, depth):
+        DepthLim = 2
+        state = currentState
+        allMoves = listAllLegalMoves(state)
+        rankList = []
+
+        allMovesList = []
+        for move in allMoves:
+            childNode = getNextState(state, move)
+            rank = self.evaluation(state, childNode)
+            if rank == 1:
+                return move
+            if (depth < DepthLim):
+                self.nodeExpand(childNode, depth + 1)
+            else:
+                pass
+            rankList.append(rank)
+            allMovesList.append(move)
+
+        overallEval = self.getTheBestMove(rankList)
+
+        if depth == 0:
+            return allMovesList[overallEval]
+        else:
+            return allMovesList[overallEval]
+
+    def getTheBestMove(self, rankList):
+        return rankList.index(max(rankList))
+
     ##
     #getPlacement
     #
@@ -123,7 +194,7 @@ class AIPlayer(Player):
     #Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
-        currentSituation = checkIfWinning(self, currentState)
+        #currentSituation = checkIfWinning(self, currentState)
         moves = listAllLegalMoves(currentState)
         selectedMove = moves[random.randint(0, len(moves) - 1)];
 
@@ -187,37 +258,41 @@ class AIPlayer(Player):
 # means that the game is still running with everything above 0.5 meaning the AI is winning
 # and anything lower than 0.5 means the AI is loosing.
 #
-def checkIfWinning(self, currentState):
-    # Returns 1.0 if the AI has already won
-    if self.statusOfGame == currentPlayerWon:
-        return 1.0
-    # Returns 0.0 if the AI has already lost
-    elif self.statusOfGame == currentPlayerLost:
-        return 0.0
-
-    # Variables to store player's and the opponent's IDs
-    me = currentState.whoseTurn
-    enemy = (currentState.whoseTurn + 1) % 2
-    # Gets both player's inventories
-    myInv = getCurrPlayerInventory(currentState)
-    enemyInv = currentState.inventories[enemy]
-
-    # Variables to hold number of ants each player controls
-    allAnts = getAntList(currentState, None, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))
-    myAnts = getAntList(currentState, me, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))
-
-    ## Calculates the score the current player recieves based on the bellow factors: ##
-    # 1) The ants that the player controls on the board
-    # 2) The amount of food needed
-    # Gets divided by the number of factors taken into consideration
-    myScore = ((float(len(myAnts)) / float(len(allAnts)))
-               + (float(myInv.foodCount / 11))) / 2
-
-    print "my score: ", myScore
-    print "     total ants: ", len(allAnts)
-    print "     my ants: ", len(myAnts)
-    print "     amount of food: ", myInv.foodCount
-    return myScore
+# def checkIfWinning(self, currentState):
+#     # Returns 1.0 if the AI has already won
+#     if self.statusOfGame == currentPlayerWon:
+#         return 1.0
+#     # Returns 0.0 if the AI has already lost
+#     elif self.statusOfGame == currentPlayerLost:
+#         return 0.0
+#
+#     # Variables to store player's and the opponent's IDs
+#     me = currentState.whoseTurn
+#     enemy = (currentState.whoseTurn + 1) % 2
+#     # Gets both player's inventories
+#     myInv = getCurrPlayerInventory(currentState)
+#     enemyInv = currentState.inventories[enemy]
+#
+#     # Variables to hold list of ants each player controls
+#     allAnts = getAntList(currentState, None, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))
+#     myAnts = getAntList(currentState, me, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))
+#
+#     # Variables to hold list of worker ants each player controls
+#     myWorkers = getAntList(currentState, me, (WORKER,))
+#     allWorkers = getAntList(currentState, None, (WORKER,))
+#
+#     hasWorkers = 1
+#     if len(myWorkers) < 1:
+#
+#     myScore = ((float(len(myAnts)) / float(len(allAnts)))
+#                + (float(myInv.foodCount / 11))) / 2
+#
+#     # todo: Get rid of print statements later
+#     print "my score: ", myScore
+#     print "     total ants: ", len(allAnts)
+#     print "     my ants: ", len(myAnts)
+#     print "     amount of food: ", myInv.foodCount
+#     return myScore
     # Variables to hold player's ants and anthills
     # myWorkers = getAntList(currentState, me, (WORKER,))
     # allWorkers = getAntList(currentState, None, (WORKER,))
