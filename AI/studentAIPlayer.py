@@ -166,7 +166,7 @@ class AIPlayer(Player):
     #
     #Parameters:
     #   hasWon - True if the player has won the game, False if the player lost. (Boolean)
-    #
+    ##
     def registerWin(self, hasWon):
         if hasWon:
             self.statusOfGame = currentPlayerWon
@@ -176,6 +176,17 @@ class AIPlayer(Player):
 
 ##
 # evaluation
+# Description: This method evaluates the game state and sees if the AI
+# is currently winning or loosing against its opponent.
+#
+# Parameters:
+#   currentState - The current state of the game.
+#
+# Returns: A double that shows how well the AI is performing at a given state. 1.0
+# means the AI has already won, 0.0 means the AI has already lost. Anything in the middle
+# means that the game is still running with everything above 0.5 meaning the AI is winning
+# and anything lower than 0.5 means the AI is loosing.
+##
 def evaluation(self, currentState):
     # Checks to see if the game is already over
     # Returns 1.0 if our AI has already won
@@ -185,8 +196,6 @@ def evaluation(self, currentState):
     elif self.statusOfGame == currentPlayerLost:
         return 0.0
 
-    # Variable to hold the overall score for our AI
-    ourRank = 0
     # Variables to hold the player's Ids
     me = currentState.whoseTurn
     opponent = (currentState.whoseTurn + 1) % 2
