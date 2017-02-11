@@ -40,22 +40,38 @@ class AIPlayer(Player):
     ##
     # evaluation
     def evaluation(self, PState, currentState):
-        RankV = 0
-        me = currentState.whoseTurn
 
-        Opponent = 0 if self.playerId == 1 else 1  # gets opponents int value
+        # Checks to see if the game is already over
+        # Returns 1.0 if the AI has already won
+        if self.statusOfGame == currentPlayerWon:
+            return 1.0
+        # Returns 0.0 if the AI has already lost
+        elif self.statusOfGame == currentPlayerLost:
+            return 0.0
+
+        # Variable to hold the overall score for our AI
+        ourRank = 0
+
+        # Variables to hold the player's Ids
+        me = currentState.whoseTurn
+        opponent = (currentState.whoseTurn + 1) % 2
+
+        #Opponent = 0 if self.playerId == 1 else 1  # gets opponents int value
 
         # Find the ant count for each player
-        antCountOurs = len(getAntList(currentState, self.playerId, (0, 1, 2, 3, 4)))
-        antCountOpp = len(getAntList(currentState, Opponent, (0, 1, 2, 3, 4)))
+        antCountOurs = len(getAntList(currentState, me,
+                                      (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,)))
+        antCountOpp = len(getAntList(currentState, opponent,
+                                     (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,)))
 
-        if antCountOurs > antCountOpp:  # scoring method
-            RankV = RankV + .3
+        # Scoring method: Adds to the score if we have more ants
+        if antCountOurs > antCountOpp:
+            ourRank = ourRank + .3
 
-        # Compares both players food count
+        # Scoring method:Adds to the score if we have more food in our inventory
         if currentState.inventories[self.playerId].foodCount > currentState.inventories[
-            Opponent].foodCount:  # scoring method
-            RankV = RankV + .45
+            opponent].foodCount:
+            ourRank = ourRank + .45
 
         # Finds and compares the amount of food each player is carrying
         grabbedFoodOurs = []
@@ -66,21 +82,22 @@ class AIPlayer(Player):
                 count = count + 1
         grabbedFoodOurs = count
         Counter = 0
-        for ant in range(0, len(getAntList(currentState, Opponent, (WORKER,)))):
-            if getAntList(currentState, Opponent, (WORKER,))[ant].carrying:
+        for ant in range(0, len(getAntList(currentState, opponent, (WORKER,)))):
+            if getAntList(currentState, opponent, (WORKER,))[ant].carrying:
                 count = count + 1
         grabbedFoodOpp = count
 
         if grabbedFoodOurs > grabbedFoodOpp:
-            RankV = RankV + .2
+            ourRank = ourRank + .2
 
-        return RankV
+        # Returns the rank our AI currently scored (a double)
+        return ourRank
 
     ##
     # nodeExpand
     #
     def nodeExpand(self, currentState, depth):
-        DepthLim = 2
+        depthLimit = 2
         state = currentState
         allMoves = listAllLegalMoves(state)
         rankList = []
@@ -91,7 +108,7 @@ class AIPlayer(Player):
             rank = self.evaluation(state, childNode)
             if rank == 1:
                 return move
-            if (depth < DepthLim):
+            if (depth < depthLimit):
                 self.nodeExpand(childNode, depth + 1)
             else:
                 pass
