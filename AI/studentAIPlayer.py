@@ -126,7 +126,8 @@ class AIPlayer(Player):
         # temp variable to test the values evaluation method returns
         #cur = evaluation(self, currentState)
 
-        mo = self.nodeExpand(currentState, 1)
+        #dfdf = self.compileListOfNodes(currentState)
+        tempVariable = self.nodeExpand(currentState, 0)
         moves = listAllLegalMoves(currentState)
         selectedMove = moves[random.randint(0, len(moves) - 1)];
 
@@ -257,7 +258,7 @@ class AIPlayer(Player):
     # nodeExpand
     #
     def nodeExpand(self, currentState, depth):
-        depthLimit = 1
+        depthLimit = 0
         state = currentState
         allMoves = listAllLegalMoves(state)
         rankList = []
@@ -270,8 +271,8 @@ class AIPlayer(Player):
                 return move
             if depth < depthLimit:
                 self.nodeExpand(childNode, depth + 1)
-            # else:
-            #     pass
+            else:
+                pass
             rankList.append(rank)
             allMovesList.append(move)
 
@@ -285,12 +286,30 @@ class AIPlayer(Player):
     def getTheBestMove(self, rankList):
         return rankList.index(max(rankList))
 
-#ToDo: Implement a dictionary (look that up)
-#It could take: key: coordinate value: node class (create a class for a single node
-
-
-# class node:
-#     def __init__(self):
-#         self.parentNode = None
-#         self.newState = None
-#         self.
+#     def compileListOfNodes(self, currentState):
+#         # A copy of the current state
+#         state = currentState
+#         allMoves = listAllLegalMoves(state)
+#
+#         listOfAllMoveNodes = {}
+#
+#         for move in allMoves:
+#             key = str(move)
+#             node = Node(currentState, move)
+#             print key
+#         return key
+# #ToDo: Implement a dictionary (look that up)
+# #It could take: key: coordinate value: node class (create a class for a single node
+#
+# class Node(object):
+#     def __init__(self, currentState, move):
+#         # The move it took to reach a given state
+#         self.move = move
+#         self.newState = getNextState(currentState, move)
+#         self.score = AIPlayer.evaluation(self, self.newState)
+#
+#     def getNewState(self):
+#         return self.newState
+#
+#     def getScore(self):
+#         return self.score
