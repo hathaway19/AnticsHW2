@@ -123,8 +123,10 @@ class AIPlayer(Player):
     #Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
-        #currentSituation = checkIfWinning(self, currentState)
-        cur = evaluation(self, currentState)
+        # temp variable to test the values evaluation method returns
+        #cur = evaluation(self, currentState)
+
+        mo = self.nodeExpand(currentState, 1)
         moves = listAllLegalMoves(currentState)
         selectedMove = moves[random.randint(0, len(moves) - 1)];
 
@@ -174,178 +176,118 @@ class AIPlayer(Player):
             self.statusOfGame = currentPlayerLost
         pass
 
-##
-# evaluation
-# Description: This method evaluates the game state and sees if the AI
-# is currently winning or loosing against its opponent.
-#
-# Parameters:
-#   currentState - The current state of the game.
-#
-# Returns: A double that shows how well the AI is performing at a given state. 1.0
-# means the AI has already won, 0.0 means the AI has already lost. Anything in the middle
-# means that the game is still running with everything above 0.5 meaning the AI is winning
-# and anything lower than 0.5 means the AI is loosing.
-##
-def evaluation(self, currentState):
-    # Checks to see if the game is already over
-    # Returns 1.0 if our AI has already won
-    if self.statusOfGame == currentPlayerWon:
-        return 1.0
-    # Returns 0.0 if our AI has already lost
-    elif self.statusOfGame == currentPlayerLost:
-        return 0.0
+    ##
+    # evaluation
+    # Description: This method evaluates the game state and sees if the AI
+    # is currently winning or loosing against its opponent.
+    #
+    # Parameters:
+    #   currentState - The current state of the game.
+    #
+    # Returns: A double that shows how well the AI is performing at a given state. 1.0
+    # means the AI has already won, 0.0 means the AI has already lost. Anything in the middle
+    # means that the game is still running with everything above 0.5 meaning the AI is winning
+    # and anything lower than 0.5 means the AI is loosing.
+    ##
+    def evaluation(self, currentState):
+        # Checks to see if the game is already over
+        # Returns 1.0 if our AI has already won
+        if self.statusOfGame == currentPlayerWon:
+            return 1.0
+        # Returns 0.0 if our AI has already lost
+        elif self.statusOfGame == currentPlayerLost:
+            return 0.0
 
-    # Variables to hold the player's Ids
-    me = currentState.whoseTurn
-    opponent = (currentState.whoseTurn + 1) % 2
-    # Gets both player's inventories
-    myInv = getCurrPlayerInventory(currentState)
-    oppInv = currentState.inventories[opponent]
+        # Variables to hold the player's Ids
+        me = currentState.whoseTurn
+        opponent = (currentState.whoseTurn + 1) % 2
+        # Gets both player's inventories
+        myInv = getCurrPlayerInventory(currentState)
+        oppInv = currentState.inventories[opponent]
 
-    # Variables to hold the number of ants on the board and the one's that belong to us
-    antCountOurs = float(len(getAntList(currentState, me,
-                                        (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
-    allAntCount = float(len(getAntList(currentState, opponent,
-                                        (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
+        # Variables to hold the number of ants on the board and the one's that belong to us
+        antCountOurs = float(len(getAntList(currentState, me,
+                                            (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
+        allAntCount = float(len(getAntList(currentState, opponent,
+                                           (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
 
-    # Variables to hold our and our opponent's worker ants
-    myWorkers = getAntList(currentState, me, (WORKER,))
-    oppWorkers = getAntList(currentState, opponent, (WORKER,))
+        # Variables to hold our and our opponent's worker ants
+        myWorkers = getAntList(currentState, me, (WORKER,))
+        oppWorkers = getAntList(currentState, opponent, (WORKER,))
 
-    # Scoring method: Get the ratio of ants that belong to us
-    # Weight: 30%
-    ourRank = (antCountOurs/allAntCount)*3/7
+        # Scoring method: Get the ratio of ants that belong to us
+        # Weight: 30%
+        ourRank = (antCountOurs / allAntCount) * 3 / 7
 
-    # Scoring method: Adds score based on ratio of food we control compared to opponent
-    # Weight: 45%
-    # Adds 22.5% of score if we have same amount of food as opponent
-    if myInv.foodCount == oppInv.foodCount:
-        ourRank += 0.225
-    else:
-        ourRank += (myInv.foodCount/(myInv.foodCount + oppInv.foodCount))*9/20
-
-    # Finds and compares the amount of food each player is carrying
-    count = 0
-    # Goes through all of our workers to see amount of food that's being carried
-    for worker in myWorkers:
-        if worker.carrying:
-           count += 1
-    grabbedFoodOurs = float(count)
-    # # Goes through all of our opponents' workers to see amount of food that's being carried
-    for worker in oppWorkers:
-        if worker.carrying:
-            count += 1
-    grabbedFoodOpp = float(count)
-
-    # Scoring method: Add to score depending on amount of food being carried
-    # Weight: 20%
-    # If tied, we get half the weight, 10%
-    if grabbedFoodOurs == grabbedFoodOpp:
-        ourRank += .1
-    # Otherwise we add based on ratio of us versus opponents' food being carried
-    else:
-        ourRank += (grabbedFoodOurs / (grabbedFoodOurs + grabbedFoodOpp))*1/5
-
-    print "ourRank: ", ourRank
-    # Returns the rank our AI currently scored (a double)
-    return ourRank
-
-##
-# nodeExpand
-#
-def nodeExpand(self, currentState, depth):
-    depthLimit = 2
-    state = currentState
-    allMoves = listAllLegalMoves(state)
-    rankList = []
-
-    allMovesList = []
-    for move in allMoves:
-        childNode = getNextState(state, move)
-        rank = self.evaluation(state, childNode)
-        if rank == 1:
-            return move
-        if (depth < depthLimit):
-            self.nodeExpand(childNode, depth + 1)
+        # Scoring method: Adds score based on ratio of food we control compared to opponent
+        # Weight: 45%
+        # Adds 22.5% of score if we have same amount of food as opponent
+        if myInv.foodCount == oppInv.foodCount:
+            ourRank += 0.225
         else:
-            pass
-        rankList.append(rank)
-        allMovesList.append(move)
+            ourRank += (myInv.foodCount / (myInv.foodCount + oppInv.foodCount)) * 9 / 20
 
-    overallEval = self.getTheBestMove(rankList)
+        # Finds and compares the amount of food each player is carrying
+        count = 0
+        # Goes through all of our workers to see amount of food that's being carried
+        for worker in myWorkers:
+            if worker.carrying:
+                count += 1
+        grabbedFoodOurs = float(count)
+        # # Goes through all of our opponents' workers to see amount of food that's being carried
+        for worker in oppWorkers:
+            if worker.carrying:
+                count += 1
+        grabbedFoodOpp = float(count)
 
-    if depth == 0:
-        return allMovesList[overallEval]
-    else:
-        return allMovesList[overallEval]
+        # Scoring method: Add to score depending on amount of food being carried
+        # Weight: 20%
+        # If tied, we get half the weight, 10%
+        if grabbedFoodOurs == grabbedFoodOpp:
+            ourRank += .1
+        # Otherwise we add based on ratio of us versus opponents' food being carried
+        else:
+            ourRank += (grabbedFoodOurs / (grabbedFoodOurs + grabbedFoodOpp)) * 1 / 5
 
-def getTheBestMove(self, rankList):
-    return rankList.index(max(rankList))
-##
-# checkIfWinning
-# Description: This method, checkIfWinning, evaluates the game state and sees if the AI
-# is currently winning or loosing against its opponent.
-#
-# Parameters:
-#   hasWon - True if the player has won the game, False if the player lost. (Boolean)
-#   currentState - The current state of the game.
-#
-# Returns: A double that shows how well the AI is performing at a given state. 1.0
-# means the AI has already won, 0.0 means the AI has already lost. Anything in the middle
-# means that the game is still running with everything above 0.5 meaning the AI is winning
-# and anything lower than 0.5 means the AI is loosing.
-#
-# def checkIfWinning(self, currentState):
-#     # Returns 1.0 if the AI has already won
-#     if self.statusOfGame == currentPlayerWon:
-#         return 1.0
-#     # Returns 0.0 if the AI has already lost
-#     elif self.statusOfGame == currentPlayerLost:
-#         return 0.0
-#
-#     # Variables to store player's and the opponent's IDs
-#     me = currentState.whoseTurn
-#     enemy = (currentState.whoseTurn + 1) % 2
-#     # Gets both player's inventories
-#     myInv = getCurrPlayerInventory(currentState)
-#     enemyInv = currentState.inventories[enemy]
-#
-#     # Variables to hold list of ants each player controls
-#     allAnts = getAntList(currentState, None, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))
-#     myAnts = getAntList(currentState, me, (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))
-#
-#     # Variables to hold list of worker ants each player controls
-#     myWorkers = getAntList(currentState, me, (WORKER,))
-#     allWorkers = getAntList(currentState, None, (WORKER,))
-#
-#     hasWorkers = 1
-#     if len(myWorkers) < 1:
-#
-#     myScore = ((float(len(myAnts)) / float(len(allAnts)))
-#                + (float(myInv.foodCount / 11))) / 2
-#
-#     # todo: Get rid of print statements later
-#     print "my score: ", myScore
-#     print "     total ants: ", len(allAnts)
-#     print "     my ants: ", len(myAnts)
-#     print "     amount of food: ", myInv.foodCount
-#     return myScore
-    # Variables to hold player's ants and anthills
-    # myWorkers = getAntList(currentState, me, (WORKER,))
-    # allWorkers = getAntList(currentState, None, (WORKER,))
+        print "ourRank: ", ourRank
+        # Returns the rank our AI currently scored (a double)
+        return ourRank
+
+    ##
+    # nodeExpand
     #
-    # myFighters = getAntList(currentState, me, (DRONE, SOLDIER, R_SOLDIER,))
-    # allFighters = getAntList(currentState, me, (DRONE, SOLDIER, R_SOLDIER,))
-    #
-    # myQueen = getAntList(currentState, me, (QUEEN,))
-    # enemyQueen = getAntList(currentState, me, (QUEEN,))
-    #
-    # myAnthill = getConstrList(currentState, me, (ANTHILL,))
-    # enemyAnthill = getConstrList(currentState, enemy, (ANTHILL,))
+    def nodeExpand(self, currentState, depth):
+        depthLimit = 1
+        state = currentState
+        allMoves = listAllLegalMoves(state)
+        rankList = []
+
+        allMovesList = []
+        for move in allMoves:
+            childNode = getNextState(state, move)
+            rank = self.evaluation(childNode)
+            if rank == 1.0:
+                return move
+            if depth < depthLimit:
+                self.nodeExpand(childNode, depth + 1)
+            # else:
+            #     pass
+            rankList.append(rank)
+            allMovesList.append(move)
+
+        overallEval = self.getTheBestMove(rankList)
+
+        if depth == 0:
+            return allMovesList[overallEval]
+        else:
+            return allMovesList[overallEval]
+
+    def getTheBestMove(self, rankList):
+        return rankList.index(max(rankList))
 
 #ToDo: Implement a dictionary (look that up)
 #It could take: key: coordinate value: node class (create a class for a single node
+
 
 # class node:
 #     def __init__(self):
