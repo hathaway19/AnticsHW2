@@ -286,30 +286,28 @@ class AIPlayer(Player):
     def getTheBestMove(self, rankList):
         return rankList.index(max(rankList))
 
-#     def compileListOfNodes(self, currentState):
-#         # A copy of the current state
-#         state = currentState
-#         allMoves = listAllLegalMoves(state)
-#
-#         listOfAllMoveNodes = {}
-#
-#         for move in allMoves:
-#             key = str(move)
-#             node = Node(currentState, move)
-#             print key
+    def compileListOfNodes(self, currentState):
+        # A copy of the current state
+        state = currentState
+        allMoves = listAllLegalMoves(state)
+
+        listOfAllMoveNodes = {}
+
+        for move in allMoves:
+            key = str(move)
+        listOfAllMoveNodes['df'] = Node(state, move)
+        listOfAllMoveNodes['dfdfd'] = Node(state, move)
+        print listOfAllMoveNodes
+        #listOfAllMoveNodes['df'] = Node(state, move)
+
+        return listOfAllMoveNodes
 #         return key
 # #ToDo: Implement a dictionary (look that up)
 # #It could take: key: coordinate value: node class (create a class for a single node
 #
-# class Node(object):
-#     def __init__(self, currentState, move):
-#         # The move it took to reach a given state
-#         self.move = move
-#         self.newState = getNextState(currentState, move)
-#         self.score = AIPlayer.evaluation(self, self.newState)
-#
-#     def getNewState(self):
-#         return self.newState
-#
-#     def getScore(self):
-#         return self.score
+class Node:
+    def __init__(self, state, move):
+        # The move it took to reach a given state
+        self.move = move
+        self.newState = getNextState(state, move)
+        #self.score = AIPlayer.evaluation(self, self.newState)
