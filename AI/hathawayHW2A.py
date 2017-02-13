@@ -36,6 +36,11 @@ class AIPlayer(Player):
         super(AIPlayer,self).__init__(inputPlayerId, "SearchAITheSecond")
 
         self.statusOfGame = gameIsStillRunning
+        self.myTunnel = None
+        self.myAnthill = None
+
+        self.rankList = []
+        self.allMoveList = []
 
     ##
     #getPlacement
@@ -123,12 +128,16 @@ class AIPlayer(Player):
     #Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
-        cur = self.evaluation(currentState)
+        # Empty the lists that hold the evaluation values and the moves
+        self.rankList = []
+        self.allMoveList = []
 
         try:
-            return self.nodeExpand(currentState,0)
+            #return self.nodeExpand(currentState,0)
+            #return self.getBestPossibleMove(currentState)
+            return self.searchThroughNodes(currentState, 0)
         except:
-            print "method nodeExpand Failed"
+            print "method nodeExpand didn't return a valid move. Not moving"
             return Move(END,None,None)
     ##
     #getAttack
@@ -194,8 +203,6 @@ class AIPlayer(Player):
         # Variables to hold the player's Ids
         me = currentState.whoseTurn
         opponent = (currentState.whoseTurn + 1) % 2
-
-        print "me: ", me
         # Gets both player's inventories
         myInv = getCurrPlayerInventory(currentState)
         oppInv = currentState.inventories[opponent]
@@ -244,10 +251,9 @@ class AIPlayer(Player):
         else:
             ourRank += (grabbedFoodOurs / (grabbedFoodOurs + grabbedFoodOpp)) * 1 / 5
 
-        print "ourRank: ", ourRank
+        #print "ourRank: ", ourRank
         # Returns the rank our AI currently scored (a double)
         return ourRank
-
 
     ##
     # nodeExpand
@@ -280,3 +286,39 @@ class AIPlayer(Player):
 
     def getTheBestMove(self, rankList):
         return rankList.index(max(rankList))
+
+    def searchThroughNodes(self, currentState, depth):
+        # Variable to control the amount of moves the AI looks ahead to see which one to take
+        depthLimit = 2
+        # Variable to hold all the possible moves for a turn
+        allMoves = listAllLegalMoves(currentState)
+
+        # Goes through all the moves trying to find the best one to take
+        for move in allMoves:
+            # Finds the state that the game will be in if the move is made
+            nextState = getNextState(currentState, move)
+            # Ranking of the move (how much will this benefit the AI)
+            rank = self.evaluation(nextState)
+            # Checks multiple moves ahead depending on depth limit
+            if depth < depthLimit:
+                self.nodeExpand(nextState, depth + 1)
+            else:
+                pass
+            # Adds the move and the rank to lists
+            self.rankList.append(rank)
+            self.allMoveList.append(move)
+
+        # finds the best score out of all the moves
+        overallEval = self.getTheBestMove(self.rankList)
+
+        # Returns the moves that are considered the best
+        if depth == 0:
+            return self.allMoveList[overallEval]
+        else:
+            return self.allMoveList[overallEval]
+
+    # def getBestPossibleMove(self, currentState):
+    #     # sorted(itterable, cmp, key, reverse)
+    #     sortedListOfMoves = sorted([(self.evaluation(getNextState(currentState, move)), move) for move in listAllLegalMoves(currentState)], reverse=True)[0][1]
+    #
+    #     return sortedListOfMoves
