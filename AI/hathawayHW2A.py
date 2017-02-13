@@ -33,11 +33,9 @@ class AIPlayer(Player):
     #   inputPlayerId - The id to give the new player (int)
     ##
     def __init__(self, inputPlayerId):
-        super(AIPlayer,self).__init__(inputPlayerId, "SearchAI")
+        super(AIPlayer,self).__init__(inputPlayerId, "SearchAITheSecond")
 
         self.statusOfGame = gameIsStillRunning
-        self.bestScore = -111.00
-        self.bestMove = None
 
     ##
     #getPlacement
@@ -125,31 +123,13 @@ class AIPlayer(Player):
     #Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
     def getMove(self, currentState):
-        self.bestMove = None
-        self.bestScore = -1000.00
-        # temp variable to test the values evaluation method returns
-        #cur = evaluation(self, currentState)
+        cur = self.evaluation(currentState)
 
-        #listOfNodes = self.findBestEvalOfNode(currentState)
-
-        #tempVariable = self.nodeExpand(currentState, 0)
-        me = currentState.whoseTurn
-        myQueen = getAntList(currentState, me, (QUEEN,))
-
-        tempVariable = Move(END, None, None)
-
-        for queen in myQueen:
-            tempVariable = self.antMovementOptions(queen,UNIT_STATS[QUEEN][MOVEMENT])
-        # moves = listAllLegalMoves(currentState)
-        # selectedMove = moves[random.randint(0, len(moves) - 1)];
-        #
-        # # don't do a build move if there are already 3+ ants
-        # numAnts = len(currentState.inventories[currentState.whoseTurn].ants)
-        # while (selectedMove.moveType == BUILD and numAnts >= 3):
-        #     selectedMove = moves[random.randint(0, len(moves) - 1)];
-
-        return tempVariable
-    
+        try:
+            return self.nodeExpand(currentState,0)
+        except:
+            print "method nodeExpand Failed"
+            return Move(END,None,None)
     ##
     #getAttack
     #Description: The getAttack method is called on the player whenever an ant completes
@@ -214,6 +194,8 @@ class AIPlayer(Player):
         # Variables to hold the player's Ids
         me = currentState.whoseTurn
         opponent = (currentState.whoseTurn + 1) % 2
+
+        print "me: ", me
         # Gets both player's inventories
         myInv = getCurrPlayerInventory(currentState)
         oppInv = currentState.inventories[opponent]
@@ -266,23 +248,6 @@ class AIPlayer(Player):
         # Returns the rank our AI currently scored (a double)
         return ourRank
 
-    def antMovementOptions(self, currentState, antToMove, amountOfMovement):
-        state = currentState
-        depthLimit = 2
-
-        movementOptions = listAllMovementPaths(state, antToMove.coords, amountOfMovement)
-
-        for movement in movementOptions:
-            childNode = getNextState(state, movement)
-            rank = self.evaluation(childNode)
-            if rank == 1.0:
-                return movement
-            if rank >= self.bestScore:
-                self.bestScore = rank
-                self.bestMove = movement
-            else:
-                pass
-        return self.bestMove
 
     ##
     # nodeExpand
@@ -315,33 +280,3 @@ class AIPlayer(Player):
 
     def getTheBestMove(self, rankList):
         return rankList.index(max(rankList))
-
-    def compileListOfNodes(self, currentState):
-        # A copy of the current state
-        state = currentState
-        allMoves = listAllLegalMoves(state)
-
-        listOfAllMoveNodes = {}
-
-        for move in allMoves:
-            key = str(move)
-            listOfAllMoveNodes[key] = Node(state, move)
-        return listOfAllMoveNodes
-
-    def findBestEvalOfNode(self, currentState):
-
-        listOfNodes = self.compileListOfNodes(currentState)
-        evalOfNodes = []
-
-        #for key in listOfNodes:
-            #evalOfNodes[] = self.evaluation(listOfNodes[key].newState)
-        return "dfdfdf"
-# #ToDo: Implement a dictionary (look that up)
-# #It could take: key: coordinate value: node class (create a class for a single node
-#
-class Node:
-    def __init__(self, state, move):
-        # The move it took to reach a given state
-        self.move = move
-        self.newState = getNextState(state, move)
-        #self.score = evaluation(self, self.newState)
