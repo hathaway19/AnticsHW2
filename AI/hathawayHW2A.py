@@ -131,7 +131,6 @@ class AIPlayer(Player):
         # Empty the lists that hold the evaluation values and the moves
         self.rankList = []
         self.allMoveList = []
-
         try:
             #return self.nodeExpand(currentState,0)
             #return self.getBestPossibleMove(currentState)
