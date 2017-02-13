@@ -14,6 +14,7 @@ from AIPlayerUtils import *
 currentPlayerWon = 1
 currentPlayerLost = -1
 gameIsStillRunning = 0
+depthLimit = 2
 
 ##
 #AIPlayer
@@ -258,7 +259,6 @@ class AIPlayer(Player):
     # nodeExpand
     #
     def nodeExpand(self, currentState, depth):
-        depthLimit = 1
         state = currentState
         allMoves = listAllLegalMoves(state)
         rankList = []
@@ -287,15 +287,14 @@ class AIPlayer(Player):
         return rankList.index(max(rankList))
 
     def searchThroughNodes(self, currentState, depth):
-        # Variable to control the amount of moves the AI looks ahead to see which one to take
-        depthLimit = 2
+        state = currentState
         # Variable to hold all the possible moves for a turn
-        allMoves = listAllLegalMoves(currentState)
+        allMoves = listAllLegalMoves(state)
 
         # Goes through all the moves trying to find the best one to take
         for move in allMoves:
             # Finds the state that the game will be in if the move is made
-            nextState = getNextState(currentState, move)
+            nextState = getNextState(state, move)
             # Ranking of the move (how much will this benefit the AI)
             rank = self.evaluation(nextState)
             # Checks multiple moves ahead depending on depth limit
