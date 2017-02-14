@@ -103,24 +103,24 @@ class AIPlayer(Player):
             return moves
         else:
             return [(0, 0)]
-    
+
     ##
     #getMove
-    #Description: The getMove method corresponds to the play phase of the game 
-    #and requests from the player a Move object. All types are symbolic 
-    #constants which can be referred to in Constants.py. The move object has a 
-    #field for type (moveType) as well as field for relevant coordinate 
-    #information (coordList). If for instance the player wishes to move an ant, 
-    #they simply return a Move object where the type field is the MOVE_ANT constant 
-    #and the coordList contains a listing of valid locations starting with an Ant 
-    #and containing only unoccupied spaces thereafter. A build is similar to a move 
-    #except the type is set as BUILD, a buildType is given, and a single coordinate 
-    #is in the list representing the build location. For an end turn, no coordinates 
+    #Description: The getMove method corresponds to the play phase of the game
+    #and requests from the player a Move object. All types are symbolic
+    #constants which can be referred to in Constants.py. The move object has a
+    #field for type (moveType) as well as field for relevant coordinate
+    #information (coordList). If for instance the player wishes to move an ant,
+    #they simply return a Move object where the type field is the MOVE_ANT constant
+    #and the coordList contains a listing of valid locations starting with an Ant
+    #and containing only unoccupied spaces thereafter. A build is similar to a move
+    #except the type is set as BUILD, a buildType is given, and a single coordinate
+    #is in the list representing the build location. For an end turn, no coordinates
     #are necessary, just set the type as END and return.
     #
     #Parameters:
-    #   currentState - The current state of the game at the time the Game is 
-    #       requesting a move from the player.(GameState)   
+    #   currentState - The current state of the game at the time the Game is
+    #       requesting a move from the player.(GameState)
     #
     #Return: Move(moveType [int], coordList [list of 2-tuples of ints], buildType [int]
     ##
@@ -149,7 +149,7 @@ class AIPlayer(Player):
         #     selectedMove = moves[random.randint(0, len(moves) - 1)];
 
         return tempVariable
-    
+
     ##
     #getAttack
     #Description: The getAttack method is called on the player whenever an ant completes
@@ -175,8 +175,8 @@ class AIPlayer(Player):
 
     ##
     #registerWin
-    #Description: The last method, registerWin, is called when the game ends and simply 
-    #indicates to the AI whether it has won or lost the game. This is to help with 
+    #Description: The last method, registerWin, is called when the game ends and simply
+    #indicates to the AI whether it has won or lost the game. This is to help with
     #learning algorithms to develop more successful strategies.
     #
     #Parameters:

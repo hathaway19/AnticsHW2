@@ -14,7 +14,19 @@ from AIPlayerUtils import *
 currentPlayerWon = 1
 currentPlayerLost = -1
 gameIsStillRunning = 0
-Depth_Limit = 1
+Depth_Limit = 2
+
+##
+# Authors: Justin Hathaway, Logan Simpson
+#
+# Assignment: Homework #2: Search AI
+#
+# Due Date: Febuary 13th, 2017
+#
+# Description: This class interacts with the rest of the game
+# to make a search AI. This search AI checks the surrounding states resulting from
+# different moves and makes a move based on the best scores from those states.
+##
 
 ##
 #AIPlayer
@@ -34,15 +46,13 @@ class AIPlayer(Player):
     #   inputPlayerId - The id to give the new player (int)
     ##
     def __init__(self, inputPlayerId):
-        super(AIPlayer,self).__init__(inputPlayerId, "SearchAITheSecond")
+        super(AIPlayer,self).__init__(inputPlayerId, "TheSearchForFood")
 
+        # Variable to know that the game is still running
         self.statusOfGame = gameIsStillRunning
-        self.myTunnel = None
-        self.myAnthill = None
 
         self.rankList = []
         self.allMoveList = []
-        self.listOfParentStates = []
 
     ##
     #getPlacement
@@ -133,11 +143,11 @@ class AIPlayer(Player):
         # Empty the lists that hold the evaluation values and the moves
         self.rankList = []
         self.allMoveList = []
-        self.listOfParentStates = []
+
+        # Tries to get a move
         try:
-            return self.nodeExpand(currentState,0)
-            #return self.findShortPath(currentState,0)
-            #return self.findBestNode(currentState, 0)
+            return self.nodeExpand(currentState, 0)
+        # If it fails, the move ends
         except:
             print "method nodeExpand didn't return a valid move. Not moving"
             return Move(END,None,None)
@@ -180,6 +190,17 @@ class AIPlayer(Player):
             self.statusOfGame = currentPlayerLost
         pass
 
+    def pickBetweenCoords(self, currentState, startCoords, endGoals):
+        closestGoal = endGoals[0]
+        distToClosestGoal = approxDist(startCoords, closestGoal)
+
+        for goalCoord in endGoals:
+            distFromCurrentGoal = approxDist(startCoords, goalCoord)
+            if distFromCurrentGoal < distToClosestGoal:
+                distToClosestGoal = distFromCurrentGoal
+                closestGoal = goalCoord
+        return goalCoord
+
     ##
     # evaluation
     # Description: This method evaluates the game state and sees if the AI
@@ -202,61 +223,78 @@ class AIPlayer(Player):
         elif self.statusOfGame == currentPlayerLost:
             return 0.0
 
-        # Variables to hold the player's Ids
+        # Gets my id
         me = currentState.whoseTurn
-        opponent = (currentState.whoseTurn + 1) % 2
-        # Gets both player's inventories
+        # Gets my inventory
         myInv = getCurrPlayerInventory(currentState)
-        oppInv = currentState.inventories[opponent]
 
-        # Variables to hold the number of ants on the board and the one's that belong to us
-        antCountOurs = float(len(getAntList(currentState, me,
-                                            (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
-        allAntCount = float(len(getAntList(currentState, opponent,
-                                           (QUEEN, WORKER, DRONE, SOLDIER, R_SOLDIER,))))
+        # Variable to hold all 4 foods
+        myFoods = getConstrList(currentState, None, (FOOD,))
+        # Variable to hold the food locations from myFoods
+        myFoodCoords = []
+        # Adds each foods coordinates to the coordinate list
+        for food in myFoods:
+            myFoodCoords.append(food.coords)
 
-        # Variables to hold our and our opponent's worker ants
+        # Variable to hold a list of my constructs (the anthill and the tunnel)
+        myConstructs = getConstrList(currentState, me, (ANTHILL, TUNNEL,))
+        # Variable to hold the coordinates of the constructs in myConstructs
+        myConstructsCoords = []
+        # Adds both the tunnel and the anthill coordinates to the list of construct coordinates
+        myConstructsCoords.append(myConstructs[0].coords)
+        myConstructsCoords.append(myConstructs[1].coords)
+
+        # Variable to hold a list of my workers
         myWorkers = getAntList(currentState, me, (WORKER,))
-        oppWorkers = getAntList(currentState, opponent, (WORKER,))
 
-        # Scoring method: Get the ratio of ants that belong to us
-        # Weight: 30%
-        ourRank = (antCountOurs / allAntCount) * 3 / 7
+        # Variable to hold total amount of distance ants have from their goal
+        rankFromDistToGoal = 0.0
 
-        # Scoring method: Adds score based on ratio of food we control compared to opponent
-        # Weight: 45%
-        # Adds 22.5% of score if we have same amount of food as opponent
-        if myInv.foodCount == oppInv.foodCount:
-            ourRank += 0.225
-        else:
-            ourRank += (myInv.foodCount / (myInv.foodCount + oppInv.foodCount)) * 9 / 20
+        # Calculate the rank gained from food in inventory
+        rankFromFood = ((float(myInv.foodCount)) / float(FOOD_GOAL)) * 5.0
 
-        # Finds and compares the amount of food each player is carrying
-        count = 0
-        # Goes through all of our workers to see amount of food that's being carried
+        # Goes through all the workers and trys to guide them to food or constructs through use of score
         for worker in myWorkers:
+            # If the worker is carrying, they should head to tunnel or anthill
             if worker.carrying:
-                count += 1
-        grabbedFoodOurs = float(count)
-        # # Goes through all of our opponents' workers to see amount of food that's being carried
-        for worker in oppWorkers:
-            if worker.carrying:
-                count += 1
-        grabbedFoodOpp = float(count)
+                # Finds the closest construct (tunnel or anthill) and guides ant there
+                myClosestConstruct = self.pickBetweenCoords(currentState, worker.coords, myConstructsCoords)
+                # Finds the distance from the ant to the construct
+                distToClosestConstruct = stepsToReach(currentState, worker.coords, myClosestConstruct)
+                # Begins to calculate how it will effect overall score
+                rankFromDistToGoal += distToClosestConstruct / 2.0
+            # Worker isn't carrying, move towards a food source
+            else:
+                # Finds closest food and sets path
+                closestFood = self.pickBetweenCoords(currentState, worker.coords, myFoodCoords)
+                # Gets food distance from ant
+                foodDistance = stepsToReach(currentState, worker.coords, closestFood)
+                # Calculates distance into score
+                rankFromDistToGoal += foodDistance / 2.0
 
-        # Scoring method: Add to score depending on amount of food being carried
-        # Weight: 20%
-        # If tied, we get half the weight, 10%
-        if grabbedFoodOurs == grabbedFoodOpp:
-            ourRank += .1
-        # Otherwise we add based on ratio of us versus opponents' food being carried
+        # There's no workers, score goes down (since it's necessary)
+        notEnoughWorkersResult = 0.0
+        # If there's no workers, no distance goal necessary. Need to build more
+        if len(myWorkers) < 1:
+            notEnoughWorkersResult = 0.2
+            rankFromDistToGoal = 0.0
         else:
-            ourRank += (grabbedFoodOurs / (grabbedFoodOurs + grabbedFoodOpp)) * 1 / 5
+            rankFromDistToGoal = 1.0 - rankFromDistToGoal / (len(myWorkers) * 20.00)
 
-        #print "ourRank: ", ourRank
-        # Returns the rank our AI currently scored (a double)
-        return ourRank
+        if rankFromDistToGoal < 0.0:
+            rankFromDistToGoal = 0.0
 
+        # weight all considerations - higher multipliers = higher weight
+        result = (rankFromFood + rankFromDistToGoal - notEnoughWorkersResult) / 5.00
+
+        # Make sure the rank stays in the boundaries that make sense
+        # (can't be 1 or 0 yet since we've yet to win or loose)
+        print result
+        return result
+
+    ##
+    # nodeExpand
+    #
     ##
     # nodeExpand
     #
@@ -275,7 +313,8 @@ class AIPlayer(Player):
             if rank == 1.0:
                 return move
             if depth < Depth_Limit:
-                self.nodeExpand(childNode, depth + 1)
+                pass
+                # self.nodeExpand(childNode, depth + 1)
             else:
                 pass
             rankList.append(rank)
@@ -290,65 +329,6 @@ class AIPlayer(Player):
         else:
             return allMovesList[overallEval]
 
+    # Helper method to find the max value in a given list
     def getTheBestMove(self, rankList):
         return rankList.index(max(rankList))
-    # def findShortPath(self, currentState, depth):
-    #     # A copy of the current state
-    #     state = currentState
-    #     # Compiles a list of all legal moves in the current state
-    #     allMoves = listAllLegalMoves(state)
-    #
-    #     oldRank = -1000
-    #     oldMove = None
-    #     for move in allMoves:
-    #         if moveTypeToStr(move) == 'END':
-    #             pass
-    #         childNode = getNextState(state, move)
-    #         rank = self.evaluation(childNode)
-    #
-    #         for move2 in listAllLegalMoves(childNode):
-    #             totalRank = self.findCombinedRank(currentState, move, move2)
-    #
-    #             if totalRank > oldRank:
-    #                 oldRank = totalRank
-    #                 oldMove = move
-    #     return oldMove
-    #
-    # def findCombinedRank(self, currentState, firstMove, secondMove):
-    #     state = currentState
-    #
-    #     stateAfterFirstMove = getNextState(state, firstMove)
-    #     stateAfterSecondMove = getNextState(stateAfterFirstMove, secondMove)
-    #     combinedRank = self.evaluation(stateAfterFirstMove) + \
-    #                     self.evaluation(stateAfterSecondMove)
-    #     return combinedRank
-
-    def searchThroughNodes(self, currentState, depth):
-        state = currentState
-        # Variable to hold all the possible moves for a turn
-        allMoves = listAllLegalMoves(state)
-
-        # Goes through all the moves trying to find the best one to take
-        for move in allMoves:
-            # Finds the state that the game will be in if the move is made
-            nextState = getNextState(state, move)
-            # Ranking of the move (how much will this benefit the AI)
-            rank = self.evaluation(nextState)
-            # Checks multiple moves ahead depending on depth limit
-            if depth < Depth_Limit:
-                self.searchThroughNodes(nextState, depth + 1)
-            else:
-                pass
-            # Adds the move and the rank to lists
-            self.rankList.append(rank)
-            self.allMoveList.append(move)
-
-        # finds the best score out of all the moves
-        overallEval = self.getTheBestMove(self.rankList)
-
-        # Returns the moves that are considered the best
-        if depth == 0:
-            return self.allMoveList[overallEval]
-        else:
-            return self.allMoveList[overallEval]
-
