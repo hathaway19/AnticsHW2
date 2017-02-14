@@ -14,7 +14,7 @@ from AIPlayerUtils import *
 currentPlayerWon = 1
 currentPlayerLost = -1
 gameIsStillRunning = 0
-depthLimit = 2
+Depth_Limit = 1
 
 ##
 #AIPlayer
@@ -42,6 +42,7 @@ class AIPlayer(Player):
 
         self.rankList = []
         self.allMoveList = []
+        self.listOfParentStates = []
 
     ##
     #getPlacement
@@ -132,10 +133,11 @@ class AIPlayer(Player):
         # Empty the lists that hold the evaluation values and the moves
         self.rankList = []
         self.allMoveList = []
+        self.listOfParentStates = []
         try:
-            #return self.nodeExpand(currentState,0)
-            #return self.getBestPossibleMove(currentState)
-            return self.searchThroughNodes(currentState, 0)
+            return self.nodeExpand(currentState,0)
+            #return self.findShortPath(currentState,0)
+            #return self.findBestNode(currentState, 0)
         except:
             print "method nodeExpand didn't return a valid move. Not moving"
             return Move(END,None,None)
@@ -259,22 +261,27 @@ class AIPlayer(Player):
     # nodeExpand
     #
     def nodeExpand(self, currentState, depth):
+        # A copy of the current state
         state = currentState
+        # Compiles a list of all legal moves in the current state
         allMoves = listAllLegalMoves(state)
-        rankList = []
 
+        rankList = []
         allMovesList = []
+
         for move in allMoves:
             childNode = getNextState(state, move)
             rank = self.evaluation(childNode)
             if rank == 1.0:
                 return move
-            if depth < depthLimit:
+            if depth < Depth_Limit:
                 self.nodeExpand(childNode, depth + 1)
             else:
                 pass
             rankList.append(rank)
             allMovesList.append(move)
+            self.rankList.append(rankList)
+            self.allMoveList.append(allMovesList)
 
         overallEval = self.getTheBestMove(rankList)
 
@@ -285,6 +292,36 @@ class AIPlayer(Player):
 
     def getTheBestMove(self, rankList):
         return rankList.index(max(rankList))
+    # def findShortPath(self, currentState, depth):
+    #     # A copy of the current state
+    #     state = currentState
+    #     # Compiles a list of all legal moves in the current state
+    #     allMoves = listAllLegalMoves(state)
+    #
+    #     oldRank = -1000
+    #     oldMove = None
+    #     for move in allMoves:
+    #         if moveTypeToStr(move) == 'END':
+    #             pass
+    #         childNode = getNextState(state, move)
+    #         rank = self.evaluation(childNode)
+    #
+    #         for move2 in listAllLegalMoves(childNode):
+    #             totalRank = self.findCombinedRank(currentState, move, move2)
+    #
+    #             if totalRank > oldRank:
+    #                 oldRank = totalRank
+    #                 oldMove = move
+    #     return oldMove
+    #
+    # def findCombinedRank(self, currentState, firstMove, secondMove):
+    #     state = currentState
+    #
+    #     stateAfterFirstMove = getNextState(state, firstMove)
+    #     stateAfterSecondMove = getNextState(stateAfterFirstMove, secondMove)
+    #     combinedRank = self.evaluation(stateAfterFirstMove) + \
+    #                     self.evaluation(stateAfterSecondMove)
+    #     return combinedRank
 
     def searchThroughNodes(self, currentState, depth):
         state = currentState
@@ -298,8 +335,8 @@ class AIPlayer(Player):
             # Ranking of the move (how much will this benefit the AI)
             rank = self.evaluation(nextState)
             # Checks multiple moves ahead depending on depth limit
-            if depth < depthLimit:
-                self.nodeExpand(nextState, depth + 1)
+            if depth < Depth_Limit:
+                self.searchThroughNodes(nextState, depth + 1)
             else:
                 pass
             # Adds the move and the rank to lists
@@ -315,8 +352,3 @@ class AIPlayer(Player):
         else:
             return self.allMoveList[overallEval]
 
-    # def getBestPossibleMove(self, currentState):
-    #     # sorted(itterable, cmp, key, reverse)
-    #     sortedListOfMoves = sorted([(self.evaluation(getNextState(currentState, move)), move) for move in listAllLegalMoves(currentState)], reverse=True)[0][1]
-    #
-    #     return sortedListOfMoves
